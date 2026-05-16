@@ -1,0 +1,4 @@
+*.pyc
+.pixie_boss_thinks_state.json
+__pycache__/
+data/cache/
