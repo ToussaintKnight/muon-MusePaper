@@ -1,0 +1,105 @@
+{
+  "roots": [
+    {
+      "id": "ai-ml",
+      "name": "AI/ML",
+      "path": "AI/ML",
+      "keywords": ["AI", "machine learning", "deep learning", "neural network"],
+      "children": [
+        {
+          "id": "ai-ml-llm",
+          "name": "LLM",
+          "path": "AI/ML → LLM",
+          "keywords": ["LLM", "large language model", "GPT", "transformer", "Claude"],
+          "children": []
+        },
+        {
+          "id": "ai-ml-mllm",
+          "name": "MLLM",
+          "path": "AI/ML → MLLM",
+          "keywords": ["MLLM", "multimodal", "vision-language", "aesthetic"],
+          "children": []
+        },
+        {
+          "id": "ai-ml-diffusion",
+          "name": "Diffusion",
+          "path": "AI/ML → Diffusion",
+          "keywords": ["diffusion", "Stable Diffusion", "image generation", "DALL-E"],
+          "children": []
+        },
+        {
+          "id": "ai-ml-agent",
+          "name": "Agent",
+          "path": "AI/ML → Agent",
+          "keywords": ["AI Agent", "tool use", "autonomous", "RAG"],
+          "children": []
+        },
+        {
+          "id": "ai-ml-eval",
+          "name": "Evaluation",
+          "path": "AI/ML → Evaluation",
+          "keywords": ["benchmark", "evaluation", "MMLU", "HumanEval"],
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "name": "Tools",
+      "path": "Tools",
+      "keywords": ["developer tool", "IDE", "framework", "CLI"],
+      "children": [
+        {
+          "id": "tools-ide",
+          "name": "IDE",
+          "path": "Tools → IDE",
+          "keywords": ["Cursor", "Windsurf", "VS Code", "neovim"],
+          "children": []
+        },
+        {
+          "id": "tools-infra",
+          "name": "Infrastructure",
+          "path": "Tools → Infrastructure",
+          "keywords": ["Docker", "Kubernetes", "cloud", "deployment"],
+          "children": []
+        },
+        {
+          "id": "tools-ai-sdk",
+          "name": "AI SDK",
+          "path": "Tools → AI SDK",
+          "keywords": ["Vercel AI SDK", "LangChain", "LlamaIndex", "MCP"],
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "design",
+      "name": "Design",
+      "path": "Design",
+      "keywords": ["UI design", "UX", "creative", "aesthetic"],
+      "children": [
+        {
+          "id": "design-ai",
+          "name": "AI Design",
+          "path": "Design → AI Design",
+          "keywords": ["generative UI", "AI design tool", "Midjourney"],
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "startup",
+      "name": "Startup",
+      "path": "Startup",
+      "keywords": ["startup", "SaaS", "融资", "product launch"],
+      "children": []
+    },
+    {
+      "id": "academic",
+      "name": "Academic",
+      "path": "Academic",
+      "keywords": ["paper", "research", "conference", "CVPR", "NeurIPS"],
+      "children": []
+    }
+  ]
+}

@@ -1,0 +1,300 @@
+%% Muse v2.0 — System Architecture & Class Diagrams
+%% Render with: https://mermaid.live/
+
+%% ============================================================
+%% 1. SYSTEM ARCHITECTURE (High-Level Data Flow)
+%% ============================================================
+
+graph TB
+    subgraph Sources["🔌 SOURCE LAYER"]
+        N[NewsNow API<br/>~600-1320 items<br/>44 Chinese platforms]
+        R[RSSHub Docker<br/>~200-500 items<br/>1000+ global routes]
+        A[Native APIs<br/>~100-200 items<br/>Reddit, HN]
+        C[Camofox Browser<br/>~50-100 items<br/>Fallback search]
+    end
+
+    subgraph Processing["⚙️ PROCESSING LAYER"]
+        AG[SourceAggregator<br/>Merge + Deduplicate]
+        EM[Embedder<br/>bge-small-zh<br/>256-dim vectors]
+        RK[RankerEngine<br/>Cosine similarity<br/>Diversity filter]
+    end
+
+    subgraph UI["🎨 UI LAYER"]
+        KB[Kanban Board<br/>50 cards<br/>Drag & Drop]
+        TG[Telegram Bot<br/>Optional push]
+    end
+
+    subgraph Learning["🧠 LEARNING LAYER"]
+        FL[Fast Loop<br/>EMA Update<br/>Per-Save]
+        SL[Slow Loop<br/>BCE Optimize<br/>Weekly]
+        HL[Human Loop<br/>Dashboard Override]
+    end
+
+    subgraph Output["📤 OUTPUT LAYER"]
+        NT[Notion Toolbox<br/>Tools column sync]
+        PR[profile.json<br/>Vector + History]
+    end
+
+    N --> AG
+    R --> AG
+    A --> AG
+    C --> AG
+    AG --> EM
+    EM --> RK
+    RK --> KB
+    KB --> FL
+    FL --> PR
+    KB --> NT
+    PR --> SL
+    SL --> PR
+    HL --> PR
+    PR --> C
+    PR --> RK
+
+    style Sources fill:#e1f5fe
+    style Processing fill:#fff3e0
+    style UI fill:#f3e5f5
+    style Learning fill:#e8f5e9
+    style Output fill:#fce4ec
+
+%% ============================================================
+%% 2. THE ONE LOOP (Simplified Conceptual Diagram)
+%% ============================================================
+
+graph LR
+    V[Interest Vector<br/>256-dim] -->|Decode| Q[Search Queries<br/>5 queries]
+    Q -->|Fetch| I[50 Items<br/>Multi-source]
+    I -->|Display| K[Kanban Board<br/>Drag & Save]
+    K -->|Update| V
+    K -->|Tools| N[Notion Toolbox]
+
+    style V fill:#ffeb3b
+    style K fill:#4caf50
+    style N fill:#2196f3
+
+%% ============================================================
+%% 3. CLASS DIAGRAM (Core Domain)
+%% ============================================================
+
+classDiagram
+    class NewsItem {
+        +str id
+        +str title
+        +str url
+        +str source
+        +str source_type
+        +datetime pub_date
+        +int heat_score
+        +np.ndarray embedding
+        +float score
+    }
+
+    class UserProfile {
+        +int version = 2
+        +str embedding_model
+        +np.ndarray interest_vector
+        +dict keyword_weights
+        +list history
+        +datetime created_at
+        +datetime updated_at
+        +save(path)
+        +load(path) UserProfile
+        +update_vector(events)
+        +recompute_keyword_weights()
+    }
+
+    class EngagementEvent {
+        +str item_id
+        +str item_title
+        +str bucket
+        +np.ndarray item_embedding
+        +datetime timestamp
+        +str top_tag
+    }
+
+    class TagNode {
+        +str id
+        +str name
+        +str path
+        +list keywords
+        +list~TagNode~ children
+        +np.ndarray embedding
+    }
+
+    UserProfile "1" --> "*" EngagementEvent : logs
+    TagNode "1" --> "*" TagNode : children
+    EngagementEvent --> NewsItem : references
+
+%% ============================================================
+%% 4. CLASS DIAGRAM (Source Layer - Strategy Pattern)
+%% ============================================================
+
+classDiagram
+    class SourceClient {
+        <<abstract>>
+        +str source_type
+        +fetch() list~NewsItem~
+        +health_check() bool
+    }
+
+    class NewsNowClient {
+        +str API_BASE
+        +list source_ids
+        +fetch_source(id) list~NewsItem~
+        +fetch_all() list~NewsItem~
+    }
+
+    class RSSHubClient {
+        +str BASE_URL
+        +list routes
+        +fetch_route(route) list~NewsItem~
+        +fetch_all() list~NewsItem~
+    }
+
+    class NativeAPIClient {
+        +dict endpoints
+        +fetch_reddit(sub) list~NewsItem~
+        +fetch_hackernews() list~NewsItem~
+    }
+
+    class CamofoxClient {
+        +str CAMOFOX_URL
+        +search(query, platform) list~NewsItem~
+        +create_tab(url) str
+        +get_snapshot(tab_id) dict
+        +close_tab(tab_id)
+    }
+
+    class SourceAggregator {
+        +list clients
+        +set seen_titles
+        +fetch_all() list~NewsItem~
+        +deduplicate(items) list~NewsItem~
+    }
+
+    SourceClient <|-- NewsNowClient
+    SourceClient <|-- RSSHubClient
+    SourceClient <|-- NativeAPIClient
+    SourceClient <|-- CamofoxClient
+    SourceAggregator o-- SourceClient
+
+%% ============================================================
+%% 5. CLASS DIAGRAM (Intelligence & Learning Layer)
+%% ============================================================
+
+classDiagram
+    class Embedder {
+        +SentenceTransformer model
+        +int dim = 256
+        +get_model() SentenceTransformer
+        +encode(text) np.ndarray
+        +encode_batch(texts) list~np.ndarray~
+    }
+
+    class RankerEngine {
+        +Embedder embedder
+        +int diversity_max_per_source
+        +int freshness_boost_hours
+        +score_item(item, profile) float
+        +rank_items(items, profile) list~NewsItem~
+        +apply_diversity(items) list~NewsItem~
+    }
+
+    class VectorDecoder {
+        +list~TagNode~ tag_tree
+        +Embedder embedder
+        +vector_to_queries(vector, top_k) list~dict~
+        +precompute_tag_embeddings()
+        +get_top_tags(vector, k) list~tuple~
+    }
+
+    class FastLoopUpdater {
+        +dict BUCKET_PARAMS
+        +update_vector(profile, events)
+        +ema_step(current, target, eta) np.ndarray
+        +normalize(vector) np.ndarray
+    }
+
+    class SlowLoopOptimizer {
+        +int min_events = 50
+        +float regularization_lambda
+        +optimize_keyword_weights(profile)
+        +compute_bce_loss(pred, actual) float
+        +should_trigger(profile) bool
+    }
+
+    class MuseEngine {
+        +SourceAggregator source_aggregator
+        +Embedder embedder
+        +RankerEngine ranker
+        +VectorDecoder decoder
+        +FastLoopUpdater fast_loop
+        +SlowLoopOptimizer slow_loop
+        +NotionSync notion
+        +UserProfile profile
+        +run_morning_routine() list~NewsItem~
+        +handle_save(session) SaveResult
+        +get_search_queries() list~str~
+    }
+
+    MuseEngine o-- Embedder
+    MuseEngine o-- RankerEngine
+    MuseEngine o-- VectorDecoder
+    MuseEngine o-- FastLoopUpdater
+    MuseEngine o-- SlowLoopOptimizer
+    VectorDecoder --> Embedder
+    RankerEngine --> Embedder
+
+%% ============================================================
+%% 6. LEARNING LOOP SEQUENCE (Simplified)
+%% ============================================================
+
+sequenceDiagram
+    actor User
+    participant KB as KanbanUI
+    participant FL as FastLoop
+    participant SL as SlowLoop
+    participant PR as profile.json
+
+    User->>KB: Drag items to columns
+    User->>KB: Press SAVE
+    KB->>FL: Send EngagementEvents
+    FL->>PR: Update interest_vector (EMA)
+    FL->>KB: Return SaveResult
+    KB->>User: Show updated top tags
+
+    Note over SL: Weekly trigger (Sunday 3AM)
+    SL->>PR: Read history
+    SL->>SL: Optimize keyword_weights
+    SL->>PR: Write updated weights
+
+%% ============================================================
+%% 7. SOURCE FETCH SEQUENCE
+%% ============================================================
+
+sequenceDiagram
+    participant ME as MuseEngine
+    participant AG as SourceAggregator
+    participant N as NewsNowClient
+    participant R as RSSHubClient
+    participant A as NativeAPIClient
+    participant EM as Embedder
+    participant RK as RankerEngine
+
+    ME->>AG: fetch_all()
+    par Parallel fetch
+        AG->>N: fetch()
+        N-->>AG: items[]
+    and
+        AG->>R: fetch()
+        R-->>AG: items[]
+    and
+        AG->>A: fetch()
+        A-->>AG: items[]
+    end
+    AG->>AG: deduplicate()
+    AG-->>ME: unified_items[]
+    ME->>EM: encode_batch(titles)
+    EM-->>ME: embeddings[]
+    ME->>RK: rank_items(items, profile)
+    RK-->>ME: top_50[]
