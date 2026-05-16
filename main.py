@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from muse.engine import MuseEngine
@@ -32,6 +33,13 @@ app = FastAPI(
     version="2.0.0",
     lifespan=lifespan,
 )
+
+# ── Dashboard ──────────────────────────────────────────────────────────
+
+@app.get("/")
+async def root():
+    """Serve the Kanban dashboard."""
+    return FileResponse("dashboard/index.html")
 
 
 # ── Request/Response Models ────────────────────────────────────────────
