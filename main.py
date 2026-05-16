@@ -23,6 +23,12 @@ async def lifespan(app: FastAPI):
     """Startup/shutdown lifecycle."""
     global _engine
     _engine = MuseEngine()
+    # Eager-load embedding model so first request isn't slow
+    from muse.embedder import get_model
+    try:
+        get_model()
+    except Exception:
+        pass
     yield
     if _engine:
         await _engine.close()
