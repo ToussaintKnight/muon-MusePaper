@@ -57,6 +57,52 @@
       color: #71717a;
     }
     .stats span { color: #e4e4e7; font-weight: 500; }
+
+    /* Onboarding */
+    .onboarding {
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+    .onboarding h2 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    .onboarding p {
+      color: #a1a1aa;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .tag-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .tag-option {
+      background: #18181b;
+      border: 2px solid #27272a;
+      border-radius: 8px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tag-option:hover { border-color: #3f3f46; }
+    .tag-option.selected {
+      border-color: #22c55e;
+      background: #132d1e;
+    }
+    .tag-option .name {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .tag-option .kw {
+      font-size: 11px;
+      color: #71717a;
+    }
+
+    /* Board */
     .board {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -101,7 +147,6 @@
       margin-bottom: 8px;
       cursor: grab;
       transition: transform 0.15s, box-shadow 0.15s;
-      position: relative;
     }
     .card:hover {
       border-color: #52525b;
@@ -167,14 +212,6 @@
     }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.error { background: #ef4444; color: #fff; }
-    .loading {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 200px;
-      color: #71717a;
-      font-size: 14px;
-    }
     .profile-panel {
       background: #18181b;
       border: 1px solid #27272a;
@@ -217,44 +254,41 @@
     </div>
   </header>
 
-  <div class="toolbar">
-    <div class="stats">
-      <div>Session: <span id="sessionId">-</span></div>
-      <div>Items: <span id="itemCount">0</span></div>
-      <div>Saves: <span id="saveCount">0</span></div>
-    </div>
+  <!-- ONBOARDING -->
+  <div id="onboarding" class="onboarding" style="display:none;">
+    <h2>What are you interested in?</h2>
+    <p>Select at least 3 topics to personalize your daily feed. You can always change these later.</p>
+    <div class="tag-grid" id="tagGrid"></div>
+    <button class="btn" id="startBtn" onclick="confirmOnboarding()" disabled>Start Exploring</button>
   </div>
 
-  <div class="profile-panel" id="profilePanel" style="display:none;">
-    <h3>Top Interests</h3>
-    <div class="tag-list" id="tagList"></div>
-  </div>
-
-  <div class="board">
-    <div class="column" data-bucket="tools" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-      <div class="column-header">
-        Tools <span class="count" id="toolsCount">0</span>
-      </div>
-      <div class="column-body" id="toolsBody">
-        <div class="empty-state">Drag actionable items here</div>
+  <!-- KANBAN -->
+  <div id="kanban">
+    <div class="toolbar">
+      <div class="stats">
+        <div>Session: <span id="sessionId">-</span></div>
+        <div>Items: <span id="itemCount">0</span></div>
+        <div>Saves: <span id="saveCount">0</span></div>
       </div>
     </div>
 
-    <div class="column" data-bucket="interested" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-      <div class="column-header">
-        Interested <span class="count" id="interestedCount">0</span>
-      </div>
-      <div class="column-body" id="interestedBody">
-        <div class="empty-state">Drag items you want to see more of</div>
-      </div>
+    <div class="profile-panel" id="profilePanel" style="display:none;">
+      <h3>Top Interests</h3>
+      <div class="tag-list" id="tagList"></div>
     </div>
 
-    <div class="column" data-bucket="not_interested" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-      <div class="column-header">
-        Not Interested <span class="count" id="notInterestedCount">0</span>
+    <div class="board">
+      <div class="column" data-bucket="tools" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+        <div class="column-header">Tools <span class="count" id="toolsCount">0</span></div>
+        <div class="column-body" id="toolsBody"><div class="empty-state">Drag actionable items here</div></div>
       </div>
-      <div class="column-body" id="notInterestedBody">
-        <div class="empty-state">Drag items to stop seeing</div>
+      <div class="column" data-bucket="interested" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+        <div class="column-header">Interested <span class="count" id="interestedCount">0</span></div>
+        <div class="column-body" id="interestedBody"><div class="empty-state">Drag items you want to see more of</div></div>
+      </div>
+      <div class="column" data-bucket="not_interested" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+        <div class="column-header">Not Interested <span class="count" id="notInterestedCount">0</span></div>
+        <div class="column-body" id="notInterestedBody"><div class="empty-state">Drag items to stop seeing</div></div>
       </div>
     </div>
   </div>
@@ -265,12 +299,10 @@
     const API = 'http://localhost:8000';
     let sessionId = null;
     let items = [];
+    let selectedTags = new Set();
 
     async function fetchJSON(path, opts = {}) {
-      const res = await fetch(API + path, {
-        headers: { 'Content-Type': 'application/json' },
-        ...opts
-      });
+      const res = await fetch(API + path, { headers: { 'Content-Type': 'application/json' }, ...opts });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     }
@@ -282,12 +314,112 @@
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
+    // ── Onboarding ────────────────────────────────────────────────
+
+    async function init() {
+      try {
+        const profile = await fetchJSON('/api/profile');
+        document.getElementById('saveCount').textContent = profile.save_count;
+
+        if (profile.top_tags.length === 0 && profile.save_count === 0) {
+          // First time user — show onboarding
+          showOnboarding();
+        } else {
+          showKanban();
+          renderTopTags(profile.top_tags);
+        }
+      } catch (e) {
+        console.error('init failed', e);
+        showOnboarding();
+      }
+    }
+
+    async function showOnboarding() {
+      document.getElementById('onboarding').style.display = 'block';
+      document.getElementById('kanban').style.display = 'none';
+      document.querySelector('header').style.display = 'none';
+
+      try {
+        const data = await fetchJSON('/api/onboarding/tags');
+        const grid = document.getElementById('tagGrid');
+        grid.innerHTML = '';
+        data.tags.forEach(tag => {
+          const div = document.createElement('div');
+          div.className = 'tag-option';
+          div.dataset.id = tag.id;
+          div.innerHTML = `<div class="name">${escapeHtml(tag.name)}</div><div class="kw">${escapeHtml(tag.keywords.slice(0,3).join(', '))}</div>`;
+          div.onclick = () => toggleTag(div, tag.id);
+          grid.appendChild(div);
+        });
+      } catch (e) {
+        showToast('Failed to load tags: ' + e.message, true);
+      }
+    }
+
+    function toggleTag(el, id) {
+      if (selectedTags.has(id)) {
+        selectedTags.delete(id);
+        el.classList.remove('selected');
+      } else {
+        selectedTags.add(id);
+        el.classList.add('selected');
+      }
+      document.getElementById('startBtn').disabled = selectedTags.size < 3;
+    }
+
+    async function confirmOnboarding() {
+      if (selectedTags.size < 3) return;
+      const btn = document.getElementById('startBtn');
+      btn.disabled = true;
+      btn.textContent = 'Initializing...';
+
+      try {
+        const result = await fetchJSON('/api/onboarding/confirm', {
+          method: 'POST',
+          body: JSON.stringify({ selected_tag_ids: Array.from(selectedTags) })
+        });
+        showToast('Interests set! Loading your first feed...');
+        document.getElementById('onboarding').style.display = 'none';
+        document.getElementById('kanban').style.display = 'block';
+        document.querySelector('header').style.display = 'flex';
+        renderTopTags(result.top_tags);
+        loadItems();
+      } catch (e) {
+        showToast('Failed: ' + e.message, true);
+        btn.disabled = false;
+        btn.textContent = 'Start Exploring';
+      }
+    }
+
+    function showKanban() {
+      document.getElementById('onboarding').style.display = 'none';
+      document.getElementById('kanban').style.display = 'block';
+      document.querySelector('header').style.display = 'flex';
+    }
+
+    function renderTopTags(tags) {
+      const panel = document.getElementById('profilePanel');
+      const list = document.getElementById('tagList');
+      if (!tags || tags.length === 0) {
+        panel.style.display = 'none';
+        return;
+      }
+      list.innerHTML = '';
+      tags.forEach(([conf, tag]) => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.innerHTML = `${escapeHtml(tag)}<span class="conf">${(conf * 100).toFixed(0)}%</span>`;
+        list.appendChild(span);
+      });
+      panel.style.display = 'block';
+    }
+
+    // ── Kanban ────────────────────────────────────────────────────
+
     function updateCounts() {
       ['tools', 'interested', 'not_interested'].forEach(b => {
-        const el = document.getElementById(b + 'Count');
         const body = document.getElementById(b === 'tools' ? 'toolsBody' : b === 'interested' ? 'interestedBody' : 'notInterestedBody');
-        const cards = body.querySelectorAll('.card');
-        el.textContent = cards.length;
+        document.getElementById(b + 'Count').textContent = body.querySelectorAll('.card').length;
       });
     }
 
@@ -323,38 +455,15 @@
         document.getElementById('itemCount').textContent = items.length;
         document.getElementById('saveBtn').disabled = false;
 
-        // Clear columns
         ['toolsBody', 'interestedBody', 'notInterestedBody'].forEach(id => {
           document.getElementById(id).innerHTML = '';
         });
 
-        // Load inbox into first column as starting point
         const inbox = document.getElementById('toolsBody');
         items.forEach(item => inbox.appendChild(createCard(item)));
         updateCounts();
-
-        // Load profile
-        loadProfile();
       } catch (e) {
         showToast('Failed to load: ' + e.message, true);
-      }
-    }
-
-    async function loadProfile() {
-      try {
-        const p = await fetchJSON('/api/profile');
-        document.getElementById('saveCount').textContent = p.save_count;
-        const tagList = document.getElementById('tagList');
-        tagList.innerHTML = '';
-        p.top_tags.forEach(([conf, tag]) => {
-          const span = document.createElement('span');
-          span.className = 'tag';
-          span.innerHTML = `${escapeHtml(tag)}<span class="conf">${(conf * 100).toFixed(0)}%</span>`;
-          tagList.appendChild(span);
-        });
-        document.getElementById('profilePanel').style.display = p.top_tags.length ? 'block' : 'none';
-      } catch (e) {
-        console.error('profile load failed', e);
       }
     }
 
@@ -378,7 +487,6 @@
       const id = ev.dataTransfer.getData('text/plain');
       const bucket = ev.currentTarget.dataset.bucket;
 
-      // Move in UI
       const card = document.querySelector(`.card[data-id="${id}"]`);
       if (card) {
         card.classList.remove('dragging');
@@ -387,7 +495,6 @@
         updateCounts();
       }
 
-      // Sync to backend
       try {
         await fetchJSON('/api/session/move', {
           method: 'POST',
@@ -408,18 +515,17 @@
           method: 'POST',
           body: JSON.stringify({ session_id: sessionId })
         });
-        showToast(`Saved! Vector delta: ${result.vector_delta.toFixed(4)} | Score: ${result.effectiveness_score}`);
+        showToast(`Saved! Score: ${result.effectiveness_score || 'N/A'}`);
         sessionId = null;
         document.getElementById('sessionId').textContent = '-';
-        loadProfile();
+        renderTopTags(result.new_top_tags.map((t, i) => [1.0 - i * 0.05, t]));
       } catch (e) {
         showToast('Save failed: ' + e.message, true);
         document.getElementById('saveBtn').disabled = false;
       }
     }
 
-    // Init
-    loadProfile();
+    init();
   </script>
 </body>
 </html>

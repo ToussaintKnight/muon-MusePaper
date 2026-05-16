@@ -181,8 +181,12 @@ class MuseEngine:
         return [q["query"] for q in queries]
 
     def get_top_tags(self, k: int = 5) -> list[tuple[float, str]]:
-        """Return top-k matching tags."""
-        return self.decoder.get_top_tags(self.profile.vector(), k=k)
+        """Return top-k matching tags. Empty if vector is uninitialized."""
+        vec = self.profile.vector()
+        # Check if vector is essentially zero (uninitialized)
+        if np.linalg.norm(vec) < 0.01:
+            return []
+        return self.decoder.get_top_tags(vec, k=k)
 
     def _guess_top_tag(self, item: NewsItem) -> str:
         """Heuristic: guess the best matching tag for an item."""

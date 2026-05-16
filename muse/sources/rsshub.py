@@ -39,7 +39,11 @@ class RSSHubClient(SourceClient):
 
     def _client_instance(self) -> httpx.AsyncClient:
         if self._client is None:
-            self._client = httpx.AsyncClient(timeout=self.timeout)
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "Accept": "application/json",
+            }
+            self._client = httpx.AsyncClient(timeout=self.timeout, headers=headers)
         return self._client
 
     async def fetch(self) -> list[NewsItem]:

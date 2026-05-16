@@ -8,6 +8,7 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+import numpy as np
 
 from muse.engine import MuseEngine
 from muse.models import NewsItem
@@ -94,6 +95,20 @@ class MetricsResponse(BaseModel):
     daily_metrics: list[dict]
 
 
+class OnboardingTagsResponse(BaseModel):
+    tags: list[dict]
+
+
+class OnboardingConfirmRequest(BaseModel):
+    selected_tag_ids: list[str]
+
+
+class OnboardingConfirmResponse(BaseModel):
+    success: bool
+    vector_initialized: bool
+    top_tags: list[tuple[float, str]]
+
+
 # ── Helper ─────────────────────────────────────────────────────────────
 
 def _engine_instance() -> MuseEngine:
@@ -166,6 +181,49 @@ async def get_daily_metrics():
     engine = _engine_instance()
     return MetricsResponse(
         daily_metrics=engine.profile.daily_metrics_history[-30:]  # last 30 days
+    )
+
+
+# ── Onboarding Endpoints ───────────────────────────────────────────────
+
+@app.get("/api/onboarding/tags", response_model=OnboardingTagsResponse)
+async def get_onboarding_tags():
+    """Return the interest tag tree for cold-start selection."""
+    engine = _engine_instance()
+    engine.decoder._load()
+    tags = [
+        {"id": t.id, "name": t.name, "path": t.path, "keywords": t.keywords}
+        for t in engine.decoder.tags
+    ]
+    return OnboardingTagsResponse(tags=tags)
+
+
+@app.post("/api/onboarding/confirm", response_model=OnboardingConfirmResponse)
+async def confirm_onboarding(req: OnboardingConfirmRequest):
+    """Initialize interest vector from selected tags."""
+    engine = _engine_instance()
+    engine.decoder._load()
+    
+    # Find selected tags
+    selected = [t for t in engine.decoder.tags if t.id in req.selected_tag_ids]
+    if not selected:
+        raise HTTPException(status_code=400, detail="No valid tags selected")
+    
+    # Encode each selected tag and average them
+    from muse.embedder import encode
+    import numpy as np
+    embeddings = [encode(f"{t.path}. {' '.join(t.keywords)}.") for t in selected]
+    avg_vector = np.mean(embeddings, axis=0)
+    avg_vector = avg_vector / (np.linalg.norm(avg_vector) + 1e-10)
+    
+    engine.profile.set_vector(avg_vector)
+    engine.profile.save(engine.profile_path)
+    
+    top = engine.get_top_tags(k=5)
+    return OnboardingConfirmResponse(
+        success=True,
+        vector_initialized=True,
+        top_tags=top,
     )
 
 

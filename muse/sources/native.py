@@ -28,10 +28,12 @@ class NativeAPIClient(SourceClient):
 
     async def fetch(self) -> list[NewsItem]:
         items: list[NewsItem] = []
-        try:
-            items.extend(await self._fetch_reddit("technology"))
-        except Exception:
-            pass
+        subreddits = ["technology", "programming", "machinelearning", "startups", "design"]
+        for sub in subreddits:
+            try:
+                items.extend(await self._fetch_reddit(sub))
+            except Exception:
+                pass
         try:
             items.extend(await self._fetch_hackernews())
         except Exception:

@@ -37,9 +37,9 @@ class TestRoot:
     def test_root(self, client):
         resp = client.get("/")
         assert resp.status_code == 200
-        data = resp.json()
-        assert data["name"] == "Muse"
-        assert data["version"] == "2.0.0"
+        # Root now serves dashboard HTML
+        assert "text/html" in resp.headers.get("content-type", "")
+        assert b"Muse" in resp.content
 
 
 class TestHealth:
