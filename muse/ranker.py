@@ -70,7 +70,9 @@ class RankerEngine:
         # Freshness boost
         freshness = 1.0
         if item.pub_date:
-            age = datetime.now() - item.pub_date
+            # Handle both timezone-aware and naive datetimes
+            now = datetime.now(item.pub_date.tzinfo) if item.pub_date.tzinfo else datetime.now()
+            age = now - item.pub_date
             if age < timedelta(hours=self.freshness_boost_hours):
                 freshness = self.freshness_boost_factor
         
