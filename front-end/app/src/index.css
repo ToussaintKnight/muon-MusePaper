@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Color Tokens */
+    --paper: #F5F0E1;
+    --paper-dark: #E8E0C8;
+    --ink: #1A1410;
+    --ink-light: #4A3F2E;
+    --ink-faded: #8B7D6B;
+    --rule: #C4B49A;
+    --accent: #8B2500;
+    --masthead-bg: #1A1410;
+    --sepia-overlay: rgba(139, 125, 107, 0.15);
+
+    /* Font Tokens */
+    --font-masthead: 'UnifrakturMaguntia', Georgia, serif;
+    --font-headline: 'Playfair Display', Georgia, serif;
+    --font-body: 'EB Garamond', 'Times New Roman', serif;
+    --font-caption: 'IM Fell English', Georgia, serif;
+
+    /* Spacing Tokens */
+    --gutter: 24px;
+    --gutter-mobile: 16px;
+    --rule-width: 1px;
+    --rule-thick: 2px;
+    --section-gap: 32px;
+    --column-padding: 12px;
+    --page-margin: 48px;
+    --page-margin-mobile: 16px;
+    --baseline-grid: 8px;
+
+    /* Shadcn defaults */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.625rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background-color: var(--paper);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: var(--accent);
+    color: var(--paper);
+  }
+
+  /* Smooth scrolling via Lenis */
+  html.lenis, html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  .lenis.lenis-scrolling iframe {
+    pointer-events: none;
+  }
+
+  /* Image treatment for period-authentic engravings */
+  img {
+    filter: grayscale(100%) contrast(1.2) sepia(25%);
+    border: 1px solid var(--rule);
+  }
+
+  /* Drop cap styling */
+  .drop-cap::first-letter {
+    font-family: var(--font-headline);
+    font-weight: 900;
+    font-size: 4rem;
+    line-height: 0.8;
+    float: left;
+    padding-right: 0.5rem;
+    padding-top: 0.25rem;
+    color: var(--accent);
+  }
+
+  /* Justified text for body copy */
+  .body-text {
+    text-align: justify;
+    text-align-last: left;
+    hyphens: auto;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+  }
+
+  /* Ornamental rule */
+  .ornamental-rule {
+    border: none;
+    height: var(--rule-width);
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      var(--rule) 20%,
+      var(--rule) 80%,
+      transparent 100%
+    );
+  }
+
+  .double-rule {
+    border-top: var(--rule-thick) solid var(--ink);
+    border-bottom: var(--rule-width) solid var(--rule);
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  /* Small caps utility */
+  .small-caps {
+    font-variant: small-caps;
+    letter-spacing: 0.1em;
+  }
+
+  /* Paper grain overlay */
+  .paper-grain::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+  }
+
+  /* Column rules */
+  .column-rule {
+    column-rule: var(--rule-width) solid var(--rule);
+  }
+
+  /* Navigation link hover underline */
+  .nav-link-underline {
+    position: relative;
+  }
+
+  .nav-link-underline::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: var(--ink);
+    transition: width 0.2s ease;
+  }
+
+  .nav-link-underline:hover::after {
+    width: 100%;
+  }
+}

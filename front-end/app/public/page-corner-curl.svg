@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+  <g fill="#C4B49A">
+    <!-- Curled page corner shape -->
+    <path d="M40 0 L40 40 L0 40 C20 40 35 25 35 5 L35 0 Z" opacity="0.4"/>
+    <path d="M40 0 C40 20 20 40 0 40 L0 35 C17 35 35 17 35 0 Z" opacity="0.6"/>
+    <path d="M38 2 C38 18 18 38 2 38 L2 36 C16 36 36 16 36 2 Z" opacity="0.3"/>
+  </g>
+</svg>

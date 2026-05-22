@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <g fill="#C4B49A">
+    <!-- Classic fleuron / hedera shape -->
+    <path d="M12 2C10 4 8 6 8 8c0 1.5.8 2.8 2 3.4V8c0-1.1.9-2 2-2s2 .9 2 2v3.4c1.2-.6 2-1.9 2-3.4 0-2-2-4-4-6z"/>
+    <path d="M12 22c2-2 4-4 4-6 0-1.5-.8-2.8-2-3.4V16c0 1.1-.9 2-2 2s-2-.9-2-2v-3.4c-1.2.6-2 1.9-2 3.4 0 2 2 4 4 6z"/>
+    <circle cx="12" cy="12" r="2"/>
+  </g>
+</svg>
