@@ -3,33 +3,67 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Optional
+
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import numpy as np
 
+# Resolve project root so static paths work regardless of CWD
+PROJECT_ROOT = Path(__file__).resolve().parent
+
 from muse.engine import MuseEngine
 from muse.models import NewsItem
 from muse.ui.kanban import KanbanSession
+from muse.cron import MuseCron
+from muse.telegram_bot import MuseTelegramBot
 
-# Global engine instance
+# Global instances
 _engine: Optional[MuseEngine] = None
+_cron: Optional[MuseCron] = None
+_bot: Optional[MuseTelegramBot] = None
+
+
+async def _run_daily_briefing():
+    """Callback for the cron scheduler: run morning routine + Telegram push."""
+    global _engine, _bot
+    if _engine is None:
+        return
+    try:
+        items = await _engine.run_morning_routine(top_n=50)
+        if _bot and _bot.is_configured():
+            item_dicts = [
+                {"title": i.title, "url": i.url, "score": i.score}
+                for i in items[:10]
+            ]
+            await _bot.send_daily_briefing(item_dicts)
+    except Exception as exc:
+        print(f"[Cron] daily briefing failed: {exc}")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup/shutdown lifecycle."""
-    global _engine
+    global _engine, _cron, _bot
     _engine = MuseEngine()
+    _cron = MuseCron(run_callback=_run_daily_briefing)
+    _bot = MuseTelegramBot()
     # Eager-load embedding model so first request isn't slow
     from muse.embedder import get_model
     try:
         get_model()
     except Exception:
         pass
+    # Auto-schedule daily run if not already scheduled
+    _cron.schedule_daily(hour=5, minute=30)
+    _cron.start()
     yield
+    if _cron:
+        _cron.stop()
     if _engine:
         await _engine.close()
 
@@ -46,7 +80,7 @@ app = FastAPI(
 @app.get("/")
 async def root():
     """Serve the Kanban dashboard."""
-    return FileResponse("dashboard/index.html")
+    return FileResponse(PROJECT_ROOT / "dashboard" / "index.html")
 
 
 # ── Request/Response Models ────────────────────────────────────────────
@@ -102,7 +136,7 @@ class MetricsResponse(BaseModel):
 
 
 class OnboardingTagsResponse(BaseModel):
-    tags: list[dict]
+    roots: list[dict]
 
 
 class OnboardingConfirmRequest(BaseModel):
@@ -113,6 +147,36 @@ class OnboardingConfirmResponse(BaseModel):
     success: bool
     vector_initialized: bool
     top_tags: list[tuple[float, str]]
+
+
+class ReadingItemResponse(BaseModel):
+    id: str
+    title: str
+    url: str
+    source: str
+    status: str
+    added_at: str
+    read_at: Optional[str] = None
+    summary: Optional[str] = None
+    score: Optional[float] = None
+
+
+class SummarizeRequest(BaseModel):
+    api_key: Optional[str] = None
+    base_url: Optional[str] = "https://api.openai.com/v1"
+    model: Optional[str] = "gpt-4o-mini"
+
+
+class ContentFetchRequest(BaseModel):
+    url: str
+
+
+class ContentFetchResponse(BaseModel):
+    title: str
+    text: str
+    url: str
+    ok: bool
+    error: Optional[str] = None
 
 
 # ── Helper ─────────────────────────────────────────────────────────────
@@ -165,12 +229,138 @@ async def get_profile():
     )
 
 
+@app.post("/api/profile/reset")
+async def reset_profile():
+    """Delete profile.json and reinitialize engine to force cold-start onboarding."""
+    global _engine
+    engine = _engine_instance()
+    profile_path = engine.profile_path
+    if profile_path.exists():
+        profile_path.unlink()
+    # Reinitialize engine so next request sees a fresh profile
+    _engine = MuseEngine()
+    return {"success": True, "message": "Profile reset. Refresh to start onboarding."}
+
+
+# ── Reading Queue Endpoints ────────────────────────────────────────────
+
+@app.get("/api/reading/queue", response_model=list[ReadingItemResponse])
+async def get_reading_queue():
+    """Return the user's reading queue (unread + read)."""
+    engine = _engine_instance()
+    queue = engine.profile.reading_queue
+    return [
+        ReadingItemResponse(
+            id=r.id,
+            title=r.title,
+            url=r.url,
+            source=r.source,
+            status=r.status,
+            added_at=r.added_at.isoformat(),
+            read_at=r.read_at.isoformat() if r.read_at else None,
+            summary=r.summary,
+            score=r.score,
+        )
+        for r in reversed(queue)
+    ]
+
+
+@app.post("/api/reading/{item_id}/read")
+async def mark_item_read(item_id: str):
+    """Mark a reading item as read."""
+    engine = _engine_instance()
+    for item in engine.profile.reading_queue:
+        if item.id == item_id:
+            item.status = "read"
+            item.read_at = datetime.now()
+            engine.profile.save(engine.profile_path)
+            return {"success": True}
+    raise HTTPException(status_code=404, detail="Item not found")
+
+
+@app.delete("/api/reading/{item_id}")
+async def delete_reading_item(item_id: str):
+    """Remove an item from the reading queue."""
+    engine = _engine_instance()
+    engine.profile.reading_queue = [
+        r for r in engine.profile.reading_queue if r.id != item_id
+    ]
+    engine.profile.save(engine.profile_path)
+    return {"success": True}
+
+
+@app.post("/api/reading/{item_id}/summarize")
+async def summarize_item(item_id: str, req: SummarizeRequest):
+    """Generate LLM summary for a reading item. Returns cached summary if exists."""
+    engine = _engine_instance()
+    item = next((r for r in engine.profile.reading_queue if r.id == item_id), None)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    if item.summary:
+        return {"success": True, "summary": item.summary, "cached": True}
+    
+    # If content not fetched yet, fetch it first
+    if not item.content:
+        from muse.content_fetcher import fetch_article
+        fetched = await fetch_article(item.url)
+        if fetched["ok"]:
+            item.content = fetched["text"]
+            item.title = fetched["title"] or item.title
+        else:
+            item.content = f"Could not fetch content: {fetched['error']}"
+    
+    # Call LLM if API key provided, otherwise placeholder
+    if req.api_key:
+        from muse.llm import distill_article
+        item.summary = await distill_article(
+            title=item.title,
+            content=item.content,
+            api_key=req.api_key,
+            base_url=req.base_url,
+            model=req.model,
+        )
+    else:
+        item.summary = f"## {item.title}\n\n*AI summary requires an API key. Add one in settings to enable distillation.*\n\n---\n\n{item.content[:800]}..." if item.content else "*Content not available.*"
+    
+    engine.profile.save(engine.profile_path)
+    return {"success": True, "summary": item.summary, "cached": False}
+
+
+@app.post("/api/content/fetch", response_model=ContentFetchResponse)
+async def fetch_content(req: ContentFetchRequest):
+    """Fetch and extract article text from a URL."""
+    from muse.content_fetcher import fetch_article
+    result = await fetch_article(req.url)
+    return ContentFetchResponse(**result)
+
+
 @app.get("/api/search-queries", response_model=SearchQueriesResponse)
 async def get_search_queries():
     """Get decoded search queries from current interest vector."""
     engine = _engine_instance()
     queries = engine.get_search_queries()
     return SearchQueriesResponse(queries=queries)
+
+
+# ── Cron Endpoints ─────────────────────────────────────────────────────
+
+@app.post("/api/cron/trigger")
+async def trigger_cron():
+    """Manually trigger the daily briefing run."""
+    await _run_daily_briefing()
+    return {"success": True, "message": "Daily briefing triggered"}
+
+
+@app.get("/api/cron/status")
+async def get_cron_status():
+    """Get cron scheduler status."""
+    global _cron
+    next_run = _cron.get_next_run() if _cron else None
+    return {
+        "scheduled": _cron.is_scheduled() if _cron else False,
+        "next_run": next_run.isoformat() if next_run else None,
+    }
 
 
 @app.get("/api/health", response_model=HealthResponse)
@@ -197,11 +387,18 @@ async def get_onboarding_tags():
     """Return the interest tag tree for cold-start selection."""
     engine = _engine_instance()
     engine.decoder._load()
-    tags = [
-        {"id": t.id, "name": t.name, "path": t.path, "keywords": t.keywords}
-        for t in engine.decoder.tags
-    ]
-    return OnboardingTagsResponse(tags=tags)
+
+    def node_to_dict(node):
+        return {
+            "id": node.id,
+            "name": node.name,
+            "path": node.path,
+            "keywords": node.keywords,
+            "children": [node_to_dict(c) for c in node.children],
+        }
+
+    roots = [node_to_dict(r) for r in engine.decoder.roots]
+    return OnboardingTagsResponse(roots=roots)
 
 
 @app.post("/api/onboarding/confirm", response_model=OnboardingConfirmResponse)

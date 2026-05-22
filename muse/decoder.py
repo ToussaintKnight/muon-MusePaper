@@ -17,6 +17,7 @@ class VectorDecoder:
 
     def __init__(self, tag_tree_path: Optional[Path] = None):
         self.tag_tree_path = tag_tree_path or Path(__file__).parent.parent / "data" / "tag_tree.json"
+        self.roots: list[TagNode] = []
         self.tags: list[TagNode] = []
         self._loaded = False
 
@@ -27,12 +28,15 @@ class VectorDecoder:
         
         if not self.tag_tree_path.exists():
             # Use minimal default tree
-            self.tags = _default_tags()
+            self.roots = _default_tags()
+            self.tags = []
+            for root in self.roots:
+                self.tags.extend(root.flatten())
         else:
             data = json.loads(self.tag_tree_path.read_text(encoding="utf-8"))
-            roots = [TagNode.from_dict(node) for node in data.get("roots", [])]
+            self.roots = [TagNode.from_dict(node) for node in data.get("roots", [])]
             self.tags = []
-            for root in roots:
+            for root in self.roots:
                 self.tags.extend(root.flatten())
         
         # Precompute embeddings

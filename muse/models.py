@@ -84,15 +84,61 @@ class EngagementEvent:
 # ── UserProfile ────────────────────────────────────────────────────────
 
 @dataclass
+class ReadingItem:
+    """One article in the user's reading queue."""
+
+    id: str
+    title: str
+    url: str
+    source: str
+    status: str = "unread"          # "unread" | "read" | "archived"
+    added_at: datetime = field(default_factory=datetime.now)
+    read_at: Optional[datetime] = None
+    summary: Optional[str] = None   # LLM-generated distillation
+    content: Optional[str] = None   # extracted article text
+    score: Optional[float] = None   # relevance score at time of queueing
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "title": self.title,
+            "url": self.url,
+            "source": self.source,
+            "status": self.status,
+            "added_at": self.added_at.isoformat(),
+            "read_at": self.read_at.isoformat() if self.read_at else None,
+            "summary": self.summary,
+            "content": self.content,
+            "score": self.score,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> ReadingItem:
+        return cls(
+            id=d["id"],
+            title=d["title"],
+            url=d["url"],
+            source=d["source"],
+            status=d.get("status", "unread"),
+            added_at=datetime.fromisoformat(d["added_at"]),
+            read_at=datetime.fromisoformat(d["read_at"]) if d.get("read_at") else None,
+            summary=d.get("summary"),
+            content=d.get("content"),
+            score=d.get("score"),
+        )
+
+
+@dataclass
 class UserProfile:
     """Single-user interest profile."""
 
-    version: int = 2
+    version: int = 3
     embedding_model: str = "BAAI/bge-small-zh-v1.5"
     interest_vector: list[float] = field(default_factory=lambda: [0.0] * 256)
     keyword_weights: dict[str, float] = field(default_factory=dict)
     history: list[EngagementEvent] = field(default_factory=list)
     daily_metrics_history: list[dict] = field(default_factory=list)
+    reading_queue: list[ReadingItem] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     save_count: int = 0
@@ -121,6 +167,7 @@ class UserProfile:
             "keyword_weights": self.keyword_weights,
             "history": [e.to_dict() for e in self.history[-500:]],  # keep last 500
             "daily_metrics_history": self.daily_metrics_history[-90:],  # last 90 days
+            "reading_queue": [r.to_dict() for r in self.reading_queue[-200:]],  # keep last 200
             "created_at": self.created_at.isoformat(),
             "updated_at": datetime.now().isoformat(),
             "save_count": self.save_count,
@@ -135,12 +182,13 @@ class UserProfile:
             return cls()
         data = json.loads(path.read_text(encoding="utf-8"))
         profile = cls(
-            version=data.get("version", 2),
+            version=data.get("version", 3),
             embedding_model=data.get("embedding_model", "BAAI/bge-small-zh-v1.5"),
             interest_vector=data.get("interest_vector", [0.0] * 256),
             keyword_weights=data.get("keyword_weights", {}),
             history=[EngagementEvent.from_dict(e) for e in data.get("history", [])],
             daily_metrics_history=data.get("daily_metrics_history", []),
+            reading_queue=[ReadingItem.from_dict(r) for r in data.get("reading_queue", [])],
             created_at=datetime.fromisoformat(data.get("created_at", datetime.now().isoformat())),
             updated_at=datetime.fromisoformat(data.get("updated_at", datetime.now().isoformat())),
             save_count=data.get("save_count", 0),

@@ -18,6 +18,7 @@ from muse.learning.slow_loop import SlowLoopOptimizer
 from muse.models import (
     EngagementEvent,
     NewsItem,
+    ReadingItem,
     SaveResult,
     UserProfile,
     cosine_similarity,
@@ -138,6 +139,19 @@ class MuseEngine:
         notion_synced = 0
         if self.notion and self.notion.is_configured():
             notion_synced = await self.notion.batch_sync(tools)
+        
+        # Populate reading queue with Interested items
+        interested = session.get_bucket_items("interested")
+        for item in interested:
+            # Skip duplicates by URL
+            if not any(r.url == item.url for r in self.profile.reading_queue):
+                self.profile.reading_queue.append(ReadingItem(
+                    id=item.id,
+                    title=item.title,
+                    url=item.url,
+                    source=item.source,
+                    score=item.score,
+                ))
         
         # Slow loop: trigger if enough data
         if self.slow_loop.should_trigger(self.profile):

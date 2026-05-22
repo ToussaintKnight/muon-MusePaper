@@ -60,9 +60,9 @@
 
     /* Onboarding */
     .onboarding {
-      max-width: 720px;
+      max-width: 800px;
       margin: 40px auto;
-      padding: 0 24px;
+      padding: 0 24px 100px;
     }
     .onboarding h2 {
       font-size: 24px;
@@ -73,34 +73,190 @@
       margin-bottom: 24px;
       line-height: 1.5;
     }
-    .tag-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 10px;
-      margin-bottom: 24px;
+
+    .tree-accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-    .tag-option {
+    .l1-panel {
       background: #18181b;
-      border: 2px solid #27272a;
-      border-radius: 8px;
-      padding: 14px;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .l1-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
       cursor: pointer;
+      transition: background 0.15s;
+      user-select: none;
+    }
+    .l1-header:hover { background: #1f1f23; }
+    .l1-header .checkbox {
+      width: 20px; height: 20px;
+      border: 2px solid #3f3f46;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
       transition: all 0.15s;
     }
-    .tag-option:hover { border-color: #3f3f46; }
-    .tag-option.selected {
+    .l1-header .checkbox.checked {
+      background: #22c55e;
       border-color: #22c55e;
-      background: #132d1e;
     }
-    .tag-option .name {
+    .l1-header .checkbox.checked::after {
+      content: '\2713';
+      color: #000;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .l1-header .label {
+      flex: 1;
       font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 4px;
+      font-size: 15px;
     }
-    .tag-option .kw {
-      font-size: 11px;
+    .l1-header .count {
+      font-size: 12px;
       color: #71717a;
     }
+    .l1-header .chevron {
+      font-size: 12px;
+      color: #71717a;
+      transition: transform 0.2s;
+    }
+    .l1-panel.expanded .chevron {
+      transform: rotate(180deg);
+    }
+    .l1-body {
+      padding: 0 20px 16px 52px;
+      display: none;
+    }
+    .l1-panel.expanded .l1-body {
+      display: block;
+    }
+    .l2-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+    }
+    .l2-card {
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .l2-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .l2-header:hover { background: #2e2e33; }
+    .l2-header .checkbox {
+      width: 18px; height: 18px;
+      border: 2px solid #52525b;
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .l2-header .checkbox.checked {
+      background: #22c55e;
+      border-color: #22c55e;
+    }
+    .l2-header .checkbox.checked::after {
+      content: '\2713';
+      color: #000;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .l2-header .label {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .l2-header .chevron {
+      font-size: 11px;
+      color: #71717a;
+      transition: transform 0.2s;
+    }
+    .l2-card.expanded .chevron {
+      transform: rotate(180deg);
+    }
+    .l2-body {
+      padding: 0 12px 12px 38px;
+      display: none;
+    }
+    .l2-card.expanded .l2-body {
+      display: block;
+    }
+    .l3-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .l3-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .l3-chip:hover { border-color: #3f3f46; }
+    .l3-chip.selected {
+      border-color: #22c55e;
+      background: #132d1e;
+      color: #22c55e;
+    }
+    .l3-chip .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 2px solid #3f3f46;
+    }
+    .l3-chip.selected .dot {
+      background: #22c55e;
+      border-color: #22c55e;
+    }
+    .selection-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #18181b;
+      border-top: 1px solid #27272a;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      z-index: 100;
+    }
+    .selection-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      flex: 1;
+      min-height: 28px;
+    }
+    .selection-chip {
+      background: #132d1e;
+      border: 1px solid #22c55e;
+      color: #22c55e;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .selection-empty { color: #71717a; font-size: 13px; }
 
     /* Board */
     .board {
@@ -308,6 +464,212 @@
       50% { content: '..'; }
       75% { content: '...'; }
     }
+
+    /* ── Reading Room ───────────────────────────────────────────── */
+    #readingRoom {
+      background: #f4f1ea;
+      color: #1a1a1a;
+      min-height: 100vh;
+      font-family: Georgia, 'Times New Roman', STSong, serif;
+      animation: roomEnter 0.5s ease-out;
+    }
+    @keyframes roomEnter {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .reading-header {
+      text-align: center;
+      padding: 32px 24px 16px;
+      border-bottom: 3px double #1a1a1a;
+      background: #f4f1ea;
+    }
+    .reading-header h1 {
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      font-family: Georgia, serif;
+    }
+    .reading-meta {
+      font-size: 13px;
+      color: #555;
+      font-style: italic;
+      letter-spacing: 0.04em;
+    }
+    .reading-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr 280px;
+      gap: 0;
+      max-width: 1400px;
+      margin: 0 auto;
+      min-height: calc(100vh - 120px);
+    }
+    .reading-queue {
+      background: #ece8df;
+      border-right: 1px solid #c9c3b8;
+      padding: 20px 16px;
+      overflow-y: auto;
+    }
+    .reading-queue h3 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #555;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #c9c3b8;
+    }
+    .queue-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #f4f1ea;
+      border: 1px solid #d5cfc4;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .queue-item:hover {
+      border-color: #1a1a1a;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    }
+    .queue-item.active {
+      border-color: #1a1a1a;
+      background: #fff;
+    }
+    .queue-item.read {
+      opacity: 0.5;
+    }
+    .queue-item .q-title {
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .queue-item .q-meta {
+      font-size: 11px;
+      color: #777;
+    }
+    .queue-item .q-status {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      margin-right: 6px;
+    }
+    .queue-item.read .q-status {
+      background: #999;
+    }
+    .reading-article {
+      padding: 32px 40px;
+      background: #f4f1ea;
+      overflow-y: auto;
+    }
+    .article-title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 16px;
+      color: #1a1a1a;
+    }
+    .article-source {
+      font-size: 12px;
+      color: #666;
+      font-style: italic;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #c9c3b8;
+    }
+    .article-body {
+      font-size: 16px;
+      line-height: 1.75;
+      color: #222;
+    }
+    .article-body p {
+      margin-bottom: 1.2em;
+    }
+    .article-placeholder {
+      text-align: center;
+      padding: 80px 20px;
+      color: #999;
+      font-style: italic;
+    }
+    .reading-distill {
+      background: #ece8df;
+      border-left: 1px solid #c9c3b8;
+      padding: 20px 16px;
+      overflow-y: auto;
+    }
+    .reading-distill h3 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #555;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #c9c3b8;
+    }
+    .distill-box {
+      background: #f4f1ea;
+      border: 1px solid #d5cfc4;
+      border-radius: 4px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .distill-box h4 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+      color: #444;
+    }
+    .distill-box ul {
+      margin: 0 0 12px 16px;
+      padding: 0;
+    }
+    .distill-box li {
+      margin-bottom: 6px;
+    }
+    .article-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #c9c3b8;
+    }
+    .article-actions button {
+      background: #1a1a1a;
+      color: #f4f1ea;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: Georgia, serif;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+    }
+    .article-actions button:hover {
+      opacity: 0.85;
+    }
+    .article-actions a {
+      color: #1a1a1a;
+      font-size: 12px;
+      align-self: center;
+      text-decoration: underline;
+    }
+    @media (max-width: 1000px) {
+      .reading-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+      }
+      .reading-queue, .reading-distill {
+        border: none;
+        border-bottom: 1px solid #c9c3b8;
+      }
+    }
   </style>
 </head>
 <body>
@@ -316,7 +678,10 @@
       <h1>Muse</h1>
       <div class="meta">Daily intelligence that learns what you care about</div>
     </div>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span id="cronStatus" style="font-size:11px;color:#71717a;margin-right:8px;"></span>
+      <button class="btn btn-secondary" onclick="showReadingRoom()" title="Reading Room">📰 Reading Room</button>
+      <button class="btn btn-secondary" onclick="resetProfile()" title="Reset profile and restart onboarding">Reset</button>
       <button class="btn btn-secondary" onclick="loadItems()">Refresh</button>
       <button class="btn" id="saveBtn" onclick="saveSession()" disabled>Save</button>
     </div>
@@ -334,9 +699,12 @@
   <!-- ONBOARDING -->
   <div id="onboarding" class="onboarding" style="display:none;">
     <h2>What are you interested in?</h2>
-    <p>Select at least 3 topics to personalize your daily feed. You can always change these later.</p>
-    <div class="tag-grid" id="tagGrid"></div>
-    <button class="btn" id="startBtn" onclick="confirmOnboarding()" disabled>Start Exploring</button>
+    <p>Select at least 3 topics to personalize your daily feed. Click a category to explore sub-topics.</p>
+    <div id="treeContainer"></div>
+    <div class="selection-bar">
+      <div id="selectionList" class="selection-list"><span class="selection-empty">Select at least 3 topics</span></div>
+      <button class="btn" id="startBtn" onclick="confirmOnboarding()" disabled>Start Exploring</button>
+    </div>
   </div>
 
   <!-- KANBAN -->
@@ -370,13 +738,64 @@
     </div>
   </div>
 
+  <!-- POST-SAVE TRANSITION -->
+  <div id="postSaveOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;align-items:center;justify-content:center;">
+    <div style="background:#18181b;border:1px solid #27272a;border-radius:16px;padding:40px;max-width:420px;text-align:center;">
+      <div style="font-size:48px;margin-bottom:16px;">✅</div>
+      <h2 style="font-size:20px;margin-bottom:8px;">Session Saved</h2>
+      <p style="color:#a1a1aa;margin-bottom:24px;line-height:1.5;" id="postSaveText">Your choices have been learned.</p>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button class="btn btn-secondary" onclick="hidePostSave()">Stay Here</button>
+        <button class="btn" onclick="enterReadingRoom()">📰 Enter Reading Room</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- READING ROOM -->
+  <div id="readingRoom" style="display:none;">
+    <div class="reading-header">
+      <div style="position:absolute;top:16px;left:24px;">
+        <button class="btn btn-secondary" onclick="hideReadingRoom()" style="font-family:system-ui,sans-serif;font-size:12px;">← Back to Kanban</button>
+      </div>
+      <h1>The Daily Muse</h1>
+      <div class="reading-meta" id="readingDate"></div>
+    </div>
+    <div class="reading-layout">
+      <aside class="reading-queue" id="readingQueuePanel">
+        <h3>Unread Queue</h3>
+        <div id="queueList"></div>
+      </aside>
+      <main class="reading-article" id="readingArticlePanel">
+        <div class="article-placeholder">
+          <div style="font-size:48px;margin-bottom:16px;opacity:0.3;">📰</div>
+          <p>Select an article from the queue to begin reading.</p>
+        </div>
+      </main>
+      <aside class="reading-distill" id="readingDistillPanel">
+        <h3>Distillation</h3>
+        <div id="distillContent">
+          <p style="color:#71717a;font-size:13px;">Select an article to generate an AI summary.</p>
+        </div>
+        <div style="margin-top:auto;padding-top:20px;border-top:1px solid #c9c3b8;">
+          <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#777;margin-bottom:8px;">Settings</h3>
+          <label style="font-size:11px;color:#555;display:block;margin-bottom:4px;">OpenAI API Key</label>
+          <input type="password" id="apiKeyInput" placeholder="sk-..." style="width:100%;padding:6px 8px;font-size:12px;border:1px solid #c9c3b8;border-radius:4px;background:#f4f1ea;font-family:Georgia,serif;" onchange="localStorage.setItem('muse_api_key', this.value)">
+          <p style="font-size:10px;color:#999;margin-top:4px;">Stored locally in your browser.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
     const API = 'http://localhost:8000';
     let sessionId = null;
     let items = [];
-    let selectedTags = new Set();
+    let tagTree = [];
+    let selectedTagIds = new Set();
+    let expandedL1s = new Set();
+    let expandedL2s = new Set();
 
     async function fetchJSON(path, opts = {}) {
       const res = await fetch(API + path, { headers: { 'Content-Type': 'application/json' }, ...opts });
@@ -404,7 +823,7 @@
         ]);
 
         document.getElementById('saveCount').textContent = profile.save_count;
-        preloadTags(tagsData.tags);
+        preloadTags(tagsData);
 
         const hasInterests = profile.top_tags.length > 0 || profile.save_count > 0;
 
@@ -437,17 +856,9 @@
       setTimeout(callback, 600);
     }
 
-    function preloadTags(tags) {
-      const grid = document.getElementById('tagGrid');
-      grid.innerHTML = '';
-      tags.forEach(tag => {
-        const div = document.createElement('div');
-        div.className = 'tag-option';
-        div.dataset.id = tag.id;
-        div.innerHTML = `<div class="name">${escapeHtml(tag.name)}</div><div class="kw">${escapeHtml(tag.keywords.slice(0,3).join(', '))}</div>`;
-        div.onclick = () => toggleTag(div, tag.id);
-        grid.appendChild(div);
-      });
+    function preloadTags(data) {
+      tagTree = data.roots || [];
+      renderTree();
     }
 
     function showOnboardingUI() {
@@ -456,19 +867,143 @@
       document.querySelector('header').style.display = 'none';
     }
 
-    function toggleTag(el, id) {
-      if (selectedTags.has(id)) {
-        selectedTags.delete(id);
-        el.classList.remove('selected');
+    function renderTree() {
+      const container = document.getElementById('treeContainer');
+      container.innerHTML = '';
+      const accordion = document.createElement('div');
+      accordion.className = 'tree-accordion';
+
+      tagTree.forEach(l1 => {
+        const panel = document.createElement('div');
+        panel.className = 'l1-panel' + (expandedL1s.has(l1.id) ? ' expanded' : '');
+
+        const header = document.createElement('div');
+        header.className = 'l1-header';
+        header.innerHTML = `
+          <div class="checkbox ${selectedTagIds.has(l1.id) ? 'checked' : ''}" data-id="${l1.id}"></div>
+          <div class="label">${escapeHtml(l1.name)}</div>
+          <div class="count">${countLeaves(l1)} topics</div>
+          <div class="chevron">&#9660;</div>
+        `;
+        header.onclick = (e) => {
+          if (e.target.classList.contains('checkbox')) {
+            e.stopPropagation();
+            toggleTag(l1.id);
+          } else {
+            toggleL1(l1.id);
+          }
+        };
+        panel.appendChild(header);
+
+        if (l1.children && l1.children.length) {
+          const body = document.createElement('div');
+          body.className = 'l1-body';
+          const l2Grid = document.createElement('div');
+          l2Grid.className = 'l2-grid';
+
+          l1.children.forEach(l2 => {
+            const card = document.createElement('div');
+            card.className = 'l2-card' + (expandedL2s.has(l2.id) ? ' expanded' : '');
+
+            const l2Header = document.createElement('div');
+            l2Header.className = 'l2-header';
+            l2Header.innerHTML = `
+              <div class="checkbox ${selectedTagIds.has(l2.id) ? 'checked' : ''}" data-id="${l2.id}"></div>
+              <div class="label">${escapeHtml(l2.name)}</div>
+              <div class="chevron">&#9660;</div>
+            `;
+            l2Header.onclick = (e) => {
+              if (e.target.classList.contains('checkbox')) {
+                e.stopPropagation();
+                toggleTag(l2.id);
+              } else {
+                toggleL2(l2.id);
+              }
+            };
+            card.appendChild(l2Header);
+
+            if (l2.children && l2.children.length) {
+              const l2Body = document.createElement('div');
+              l2Body.className = 'l2-body';
+              const l3List = document.createElement('div');
+              l3List.className = 'l3-list';
+              l2.children.forEach(l3 => {
+                const chip = document.createElement('div');
+                chip.className = 'l3-chip' + (selectedTagIds.has(l3.id) ? ' selected' : '');
+                chip.innerHTML = `<div class="dot"></div>${escapeHtml(l3.name)}`;
+                chip.onclick = () => toggleTag(l3.id);
+                l3List.appendChild(chip);
+              });
+              l2Body.appendChild(l3List);
+              card.appendChild(l2Body);
+            }
+
+            l2Grid.appendChild(card);
+          });
+
+          body.appendChild(l2Grid);
+          panel.appendChild(body);
+        }
+
+        accordion.appendChild(panel);
+      });
+
+      container.appendChild(accordion);
+      updateSelectionBar();
+    }
+
+    function toggleL1(id) {
+      if (expandedL1s.has(id)) expandedL1s.delete(id);
+      else expandedL1s.add(id);
+      renderTree();
+    }
+
+    function toggleL2(id) {
+      if (expandedL2s.has(id)) expandedL2s.delete(id);
+      else expandedL2s.add(id);
+      renderTree();
+    }
+
+    function toggleTag(id) {
+      if (selectedTagIds.has(id)) selectedTagIds.delete(id);
+      else selectedTagIds.add(id);
+      renderTree();
+    }
+
+    function updateSelectionBar() {
+      const list = document.getElementById('selectionList');
+      const ids = Array.from(selectedTagIds);
+      if (ids.length === 0) {
+        list.innerHTML = '<span class="selection-empty">Select at least 3 topics</span>';
       } else {
-        selectedTags.add(id);
-        el.classList.add('selected');
+        list.innerHTML = ids.map(id => {
+          const node = findNode(tagTree, id);
+          return node ? `<span class="selection-chip">${escapeHtml(node.name)}</span>` : '';
+        }).join('');
       }
-      document.getElementById('startBtn').disabled = selectedTags.size < 3;
+      const btn = document.getElementById('startBtn');
+      btn.disabled = ids.length < 3;
+      btn.textContent = ids.length < 3 ? `Select ${3 - ids.length} more` : 'Start Exploring';
+    }
+
+    function findNode(nodes, id) {
+      for (const n of nodes) {
+        if (n.id === id) return n;
+        if (n.children && n.children.length) {
+          const found = findNode(n.children, id);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    function countLeaves(node) {
+      if (!node.children || node.children.length === 0) return 1;
+      return node.children.reduce((sum, c) => sum + countLeaves(c), 0);
     }
 
     async function confirmOnboarding() {
-      if (selectedTags.size < 3) return;
+      if (selectedTagIds.size < 3) return;
       const btn = document.getElementById('startBtn');
       btn.disabled = true;
       btn.textContent = 'Initializing...';
@@ -476,7 +1011,7 @@
       try {
         const result = await fetchJSON('/api/onboarding/confirm', {
           method: 'POST',
-          body: JSON.stringify({ selected_tag_ids: Array.from(selectedTags) })
+          body: JSON.stringify({ selected_tag_ids: Array.from(selectedTagIds) })
         });
         showToast('Interests set! Loading your first feed...');
         document.getElementById('onboarding').style.display = 'none';
@@ -517,9 +1052,17 @@
     // ── Kanban ────────────────────────────────────────────────────
 
     function updateCounts() {
-      ['tools', 'interested', 'not_interested'].forEach(b => {
-        const body = document.getElementById(b === 'tools' ? 'toolsBody' : b === 'interested' ? 'interestedBody' : 'notInterestedBody');
-        document.getElementById(b + 'Count').textContent = body.querySelectorAll('.card').length;
+      const buckets = [
+        { key: 'tools', body: 'toolsBody', count: 'toolsCount' },
+        { key: 'interested', body: 'interestedBody', count: 'interestedCount' },
+        { key: 'not_interested', body: 'notInterestedBody', count: 'notInterestedCount' },
+      ];
+      buckets.forEach(b => {
+        const body = document.getElementById(b.body);
+        const countEl = document.getElementById(b.count);
+        if (body && countEl) {
+          countEl.textContent = body.querySelectorAll('.card').length;
+        }
       });
     }
 
@@ -615,17 +1158,227 @@
           method: 'POST',
           body: JSON.stringify({ session_id: sessionId })
         });
-        showToast(`Saved! Score: ${result.effectiveness_score || 'N/A'}`);
         sessionId = null;
         document.getElementById('sessionId').textContent = '-';
         renderTopTags(result.new_top_tags.map((t, i) => [1.0 - i * 0.05, t]));
+        // Show post-save overlay with queue info
+        const interestedCount = document.getElementById('interestedBody').querySelectorAll('.card').length;
+        document.getElementById('postSaveText').textContent =
+          `Learned from your choices. ${interestedCount} article${interestedCount !== 1 ? 's' : ''} queued for reading.`;
+        document.getElementById('postSaveOverlay').style.display = 'flex';
       } catch (e) {
         showToast('Save failed: ' + e.message, true);
         document.getElementById('saveBtn').disabled = false;
       }
     }
 
+    function hidePostSave() {
+      document.getElementById('postSaveOverlay').style.display = 'none';
+    }
+
+    function showReadingRoom() {
+      document.getElementById('kanban').style.display = 'none';
+      document.getElementById('readingRoom').style.display = 'block';
+      document.querySelector('header').style.display = 'none';
+      loadReadingQueue();
+      document.getElementById('readingDate').textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+      const savedKey = localStorage.getItem('muse_api_key') || '';
+      document.getElementById('apiKeyInput').value = savedKey;
+    }
+
+    function hideReadingRoom() {
+      document.getElementById('readingRoom').style.display = 'none';
+      document.getElementById('kanban').style.display = 'block';
+      document.querySelector('header').style.display = 'flex';
+    }
+
+    function enterReadingRoom() {
+      hidePostSave();
+      showReadingRoom();
+    }
+
+    let readingQueue = [];
+    let selectedArticleId = null;
+
+    async function loadReadingQueue() {
+      try {
+        readingQueue = await fetchJSON('/api/reading/queue');
+        renderQueue();
+      } catch (e) {
+        console.error('load queue failed', e);
+      }
+    }
+
+    function renderQueue() {
+      const container = document.getElementById('queueList');
+      if (!readingQueue.length) {
+        container.innerHTML = '<p style="color:#999;font-style:italic;font-size:13px;">No articles queued yet.<br>Drag items to "Interested" and Save.</p>';
+        return;
+      }
+      container.innerHTML = readingQueue.map(item => `
+        <div class="queue-item ${item.status === 'read' ? 'read' : ''} ${item.id === selectedArticleId ? 'active' : ''}" onclick="selectArticle('${item.id}')">
+          <div class="q-title"><span class="q-status"></span>${escapeHtml(item.title)}</div>
+          <div class="q-meta">${escapeHtml(item.source)} ${item.score ? '· ' + (item.score * 100).toFixed(0) + '%' : ''}</div>
+        </div>
+      `).join('');
+    }
+
+    async function selectArticle(id) {
+      selectedArticleId = id;
+      const item = readingQueue.find(r => r.id === id);
+      if (!item) return;
+      renderQueue();
+
+      const panel = document.getElementById('readingArticlePanel');
+      panel.innerHTML = `
+        <div class="article-title">${escapeHtml(item.title)}</div>
+        <div class="article-source">${escapeHtml(item.source)} · Loading content...</div>
+        <div class="article-body"><p>Fetching article...</p></div>
+        <div class="article-actions">
+          <button onclick="markArticleRead('${item.id}')">✓ Mark as Read</button>
+          <button onclick="summarizeArticle('${item.id}')">✨ Distill</button>
+          <a href="${item.url}" target="_blank" rel="noopener">Open Original ↗</a>
+        </div>
+      `;
+
+      // Fetch content if not already cached
+      if (!item.content) {
+        try {
+          const fetched = await fetchJSON('/api/content/fetch', {
+            method: 'POST',
+            body: JSON.stringify({ url: item.url })
+          });
+          item.content = fetched.text;
+          item.title = fetched.title || item.title;
+        } catch (e) {
+          item.content = '*Could not fetch article content.*';
+        }
+      }
+
+      // Render article
+      const paragraphs = (item.content || '').split('\n').filter(p => p.trim()).map(p =>
+        `<p>${escapeHtml(p)}</p>`
+      ).join('');
+      panel.innerHTML = `
+        <div class="article-title">${escapeHtml(item.title)}</div>
+        <div class="article-source">${escapeHtml(item.source)} · ${new Date(item.added_at).toLocaleDateString()}</div>
+        <div class="article-body">${paragraphs || '<p><em>Content not available.</em></p>'}</div>
+        <div class="article-actions">
+          <button onclick="markArticleRead('${item.id}')">✓ Mark as Read</button>
+          <button onclick="summarizeArticle('${item.id}')">✨ Distill</button>
+          <a href="${item.url}" target="_blank" rel="noopener">Open Original ↗</a>
+        </div>
+      `;
+
+      // Show distill panel
+      const distillPanel = document.getElementById('distillContent');
+      if (item.summary) {
+        distillPanel.innerHTML = `<div class="distill-box">${escapeHtml(item.summary)}</div>`;
+      } else {
+        distillPanel.innerHTML = `
+          <p style="color:#71717a;font-size:13px;">Click "Distill" to generate an AI summary.</p>
+          <button class="btn" style="margin-top:12px;font-family:Georgia,serif;" onclick="summarizeArticle('${item.id}')">✨ Generate Summary</button>
+        `;
+      }
+    }
+
+    async function markArticleRead(id) {
+      try {
+        await fetchJSON('/api/reading/' + id + '/read', { method: 'POST' });
+        const item = readingQueue.find(r => r.id === id);
+        if (item) item.status = 'read';
+        renderQueue();
+        showToast('Marked as read');
+      } catch (e) {
+        showToast('Failed: ' + e.message, true);
+      }
+    }
+
+    async function summarizeArticle(id) {
+      const btn = document.querySelector('.article-actions button:nth-child(2)');
+      if (btn) btn.textContent = 'Distilling...';
+      const apiKey = localStorage.getItem('muse_api_key') || '';
+      try {
+        const result = await fetchJSON('/api/reading/' + id + '/summarize', {
+          method: 'POST',
+          body: JSON.stringify({ api_key: apiKey })
+        });
+        const item = readingQueue.find(r => r.id === id);
+        if (item) item.summary = result.summary;
+        selectArticle(id);
+        showToast('Summary generated');
+      } catch (e) {
+        showToast('Failed: ' + e.message, true);
+      }
+    }
+
+    async function resetProfile() {
+      if (!confirm('Reset your profile? This clears all interests and history and restarts onboarding.')) return;
+      try {
+        await fetchJSON('/api/profile/reset', { method: 'POST' });
+        showToast('Profile reset. Reloading...');
+        setTimeout(() => window.location.reload(), 800);
+      } catch (e) {
+        if (e.message.includes('404')) {
+          showToast('Server too old — restart uvicorn to get the Reset endpoint', true);
+        } else {
+          showToast('Reset failed: ' + e.message, true);
+        }
+      }
+    }
+
+    async function loadCronStatus() {
+      try {
+        const status = await fetchJSON('/api/cron/status');
+        const el = document.getElementById('cronStatus');
+        if (status.scheduled && status.next_run) {
+          const next = new Date(status.next_run);
+          el.textContent = 'Next: ' + next.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        } else {
+          el.textContent = 'Auto-run: off';
+        }
+      } catch (e) {
+        console.error('cron status failed', e);
+      }
+    }
+
     init();
+    loadCronStatus();
+    setInterval(loadCronStatus, 60_000);
+
+    // Keyboard shortcuts for Reading Room
+    document.addEventListener('keydown', (e) => {
+      const rr = document.getElementById('readingRoom');
+      if (rr.style.display === 'none' || rr.style.display === '') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      const unread = readingQueue.filter(r => r.status !== 'read');
+      const currentIdx = unread.findIndex(r => r.id === selectedArticleId);
+
+      switch (e.key.toLowerCase()) {
+        case 'j':
+          if (unread.length && currentIdx < unread.length - 1) {
+            selectArticle(unread[currentIdx + 1].id);
+          }
+          break;
+        case 'k':
+          if (unread.length && currentIdx > 0) {
+            selectArticle(unread[currentIdx - 1].id);
+          }
+          break;
+        case 'r':
+          if (selectedArticleId) markArticleRead(selectedArticleId);
+          break;
+        case 'd':
+          if (selectedArticleId) summarizeArticle(selectedArticleId);
+          break;
+        case 'escape':
+          hideReadingRoom();
+          break;
+      }
+    });
   </script>
 </body>
 </html>
