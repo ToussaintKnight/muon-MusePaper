@@ -10,6 +10,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 import numpy as np
 
@@ -79,7 +80,10 @@ app = FastAPI(
 
 @app.get("/")
 async def root():
-    """Serve the Kanban dashboard."""
+    """Serve the newspaper frontend if built, otherwise fall back to Kanban dashboard."""
+    react_index = PROJECT_ROOT / "front-end" / "app" / "dist" / "index.html"
+    if react_index.exists():
+        return FileResponse(react_index)
     return FileResponse(PROJECT_ROOT / "dashboard" / "index.html")
 
 
@@ -179,6 +183,11 @@ class ContentFetchResponse(BaseModel):
     error: Optional[str] = None
 
 
+class NewspaperClickRequest(BaseModel):
+    session_id: str
+    item_id: str
+
+
 # ── Helper ─────────────────────────────────────────────────────────────
 
 def _engine_instance() -> MuseEngine:
@@ -200,8 +209,8 @@ def _item_to_response(item: NewsItem) -> ItemResponse:
 
 # ── API Endpoints ──────────────────────────────────────────────────────
 
-@app.get("/")
-async def root():
+@app.get("/api/status")
+async def api_status():
     return {"name": "Muse", "version": "2.0.0", "status": "running"}
 
 
@@ -496,6 +505,37 @@ async def run_pipeline():
         "count": len(items),
         "items": [_item_to_response(item) for item in items],
     }
+
+
+# ── Newspaper Endpoints ────────────────────────────────────────────────
+
+@app.get("/api/newspaper/issue")
+async def get_newspaper_issue():
+    """Return today's composed newspaper draft with abstracts."""
+    engine = _engine_instance()
+    issue, session = await engine.run_newspaper_issue(top_n=100)
+    _sessions[session.session_id] = session
+    return issue.to_dict()
+
+
+@app.post("/api/newspaper/click")
+async def newspaper_click(req: NewspaperClickRequest):
+    """Record a user click on an article (moves from inbox to interested)."""
+    session = _sessions.get(req.session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+    session.move_item(req.item_id, "interested")
+    return {"success": True, "session_id": session.session_id}
+
+
+# ── Admin / Old Dashboard ──────────────────────────────────────────────
+
+app.mount("/admin", StaticFiles(directory=str(PROJECT_ROOT / "dashboard"), html=True), name="admin")
+
+# Serve built React frontend if it exists (production)
+_REACT_BUILD_DIR = PROJECT_ROOT / "front-end" / "app" / "dist"
+if _REACT_BUILD_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(_REACT_BUILD_DIR), html=True), name="react_app")
 
 
 # ── Entry Point ────────────────────────────────────────────────────────

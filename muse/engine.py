@@ -84,6 +84,37 @@ class MuseEngine:
         ranked = self.ranker.score_and_rank(items, self.profile, top_n=top_n)
         return ranked
 
+    async def run_newspaper_issue(self, top_n: int = 100) -> tuple["NewspaperDraftIssue", KanbanSession]:
+        """
+        Full newspaper production pipeline: fetch → rank → layout → abstracts → draft.
+        Returns (draft_issue, kanban_session).
+        """
+        from muse.agents.layout_agent import LayoutAgent, NewspaperDraftIssue
+        from muse.agents.abstract_agent import AbstractAgent
+
+        # 1. Fetch and rank
+        items = await self.run_morning_routine(top_n=top_n)
+
+        # 2. Layout
+        layout_agent = LayoutAgent(self.decoder)
+        slots = layout_agent.categorize_items(items)
+        pages = layout_agent.build_pages(slots)
+
+        # 3. Abstract preparation
+        abstract_agent = AbstractAgent()
+        pages = await abstract_agent.prepare_abstracts(pages)
+
+        # 4. Create linked Kanban session (all items start in inbox = ignored)
+        session = KanbanSession.create(items, self.profile)
+
+        issue = NewspaperDraftIssue(
+            issue_date=__import__("datetime").datetime.now().strftime("%Y-%m-%d"),
+            issue_number=self.profile.save_count + 1,
+            pages=pages,
+            session_id=session.session_id,
+        )
+        return issue, session
+
     async def handle_save(self, session: KanbanSession) -> SaveResult:
         """
         Process a Kanban save:
