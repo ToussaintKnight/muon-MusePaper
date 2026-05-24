@@ -1,4 +1,4 @@
-# 🎯 Muse
+# 🎯 MusePaper | Progress: 3/5
 
 **The feedback loop that learns what you care about.**
 
